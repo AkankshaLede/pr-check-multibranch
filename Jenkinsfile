@@ -37,7 +37,7 @@ pipeline {
     environment {
         GITHUB_TOKEN = credentials('github-pat-token') // Ensure you have a Jenkins credential with this ID
         GITHUB_REPO = 'AkankshaLede/pr-check-multibranch' // Your repository name
-        BASE_BRANCH = 'automation' // The branch you want to create PRs against
+        BASE_BRANCH = 'main' // The branch you want to create PRs against
     }
 
     stages {
