@@ -42,7 +42,7 @@ pipeline {
                     sh """
                     set +x
                     echo "$GITHUB_TOKEN" | gh auth login --with-token
-                    PR_EXISTS=$(gh pr list --base "${env.BASE_BRANCH}" --head "${env.BRANCH_NAME}" --json number --jq '.[0].number' 2>/dev/null)
+                    PR_EXISTS=$(gh pr list --base "${env.BASE_BRANCH}" --head "${env.BRANCH_NAME}" --json number --jq '.[0].\$number' 2>/dev/null)
 
                     if [ -z "$PR_EXISTS" ]; then
                         echo "No existing pull request found. Creating a new one."
