@@ -1,39 +1,6 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        stage('Build') {
-            steps {
-                echo "Building on branch: ${env.BRANCH_NAME}"
-                // Add your build steps here (e.g., mvn clean install, npm install, etc.)
-            }
-        }
-        stage('Test') {
-            steps {
-                echo "Testing on branch: ${env.BRANCH_NAME}"
-                // Add your test steps here (e.g., mvn test, npm test, etc.)
-            }
-        }
-        stage('Deploy') {
-            when {
-                branch 'main' // Only run deploy on the main branch
-            }
-            steps {
-                echo "Deploying from branch: ${env.BRANCH_NAME}"
-                // Add your deployment steps here
-            }
-        }
-    }
-}
-
-pipeline {
-    agent any
-
     environment {
         GITHUB_TOKEN = credentials('github-pat-token') // Ensure you have a Jenkins credential with this ID
         GITHUB_REPO = 'AkankshaLede/pr-check-multibranch' // Your repository name
@@ -66,7 +33,7 @@ pipeline {
             }
         }
 
-        stage('Create Pull Request (if changes exist)') {
+        stage('Create Pull Request (if changes exist and not on base branch)') {
             when {
                 expression { env.HAS_CHANGES == true && env.BRANCH_NAME != env.BASE_BRANCH }
             }
@@ -75,13 +42,13 @@ pipeline {
                     sh """
                     set +x
                     echo "$GITHUB_TOKEN" | gh auth login --with-token
-                    PR_EXISTS=$(gh pr list --base "${env.BASE_BRANCH}" --head "origin/${env.BRANCH_NAME}" --json number --jq '.[0].number' 2>/dev/null)
+                    PR_EXISTS=$(gh pr list --base "${env.BASE_BRANCH}" --head "${env.BRANCH_NAME}" --json number --jq '.[0].number' 2>/dev/null)
 
                     if [ -z "$PR_EXISTS" ]; then
                         echo "No existing pull request found. Creating a new one."
                         gh pr create --title "Automated PR from ${env.BRANCH_NAME}" --body "Automated pull request triggered by changes in branch ${env.BRANCH_NAME}." --base "${env.BASE_BRANCH}" --head "${env.BRANCH_NAME}"
                     else
-                        echo "Pull request #$PR_EXISTS already exists for this branch."
+                        echo "Pull request #$PR_EXISTS already exists for branch ${env.BRANCH_NAME} targeting ${env.BASE_BRANCH}."
                     fi
                     """
                 }
